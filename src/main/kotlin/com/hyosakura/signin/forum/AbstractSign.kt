@@ -37,12 +37,22 @@ abstract class AbstractSign : Sign {
                 }
                 getText(Jsoup.parse(html).text(), successCssSelector, failCssSelector, depth - 1)
             } else {
-                println(failElement.text())
+                failElement.print()
                 true
             }
         } else {
-            println(successElement.text())
+            successElement.print()
             true
+        }
+    }
+
+    private fun Elements.print() {
+        forEach {
+            if (it.`is`("img")) {
+                println(it.attr("alt"))
+            } else {
+                println(it.text())
+            }
         }
     }
 }
