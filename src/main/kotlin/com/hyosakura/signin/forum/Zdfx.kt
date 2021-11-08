@@ -1,8 +1,6 @@
 package com.hyosakura.signin.forum
 
 import com.hyosakura.signin.util.OkHttpUtil
-import org.jsoup.Jsoup
-import java.awt.SystemColor.text
 
 /**
  * @author LovesAsuna
@@ -24,6 +22,6 @@ open class Zdfx : AbstractSign() {
         val signUrl =
             "${baseUrl}k_misign-sign.html?operation=qiandao&format=global_usernav_extra&formhash=7f7ea4ba&inajax=1&ajaxtarget=k_misign_topb"
         val response = OkHttpUtil[signUrl, OkHttpUtil.addHeaders(cookie)]
-        return getText(response, "#k_misign_topb", "root")
+        return getText(response, "#fx_checkin_b", "root")
     }
 }
