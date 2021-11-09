@@ -20,6 +20,6 @@ class Huahuo : AbstractSign() {
             mapOf("formhash" to "eddae219", "qdxq" to "kx", "qdmode" to "1", "todaysay" to "签到", "fastreply" to "0"),
             OkHttpUtil.addHeaders(cookie)
         )
-        return getText(response, "l", "div.c", 1)
+        return getText(response, "div.c", "div.c", 1)
     }
 }
