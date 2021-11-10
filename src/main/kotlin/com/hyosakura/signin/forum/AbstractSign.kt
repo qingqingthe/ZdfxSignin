@@ -12,30 +12,33 @@ abstract class AbstractSign : Sign {
         response: Response,
         successCssSelector: String,
         failCssSelector: String,
-        depth: Int = 0
+        hasCDATA: Boolean = false
     ): Boolean {
         val html = response.body?.string()
         if (html == null) {
             println("请求失败")
             return false
         }
-        return getText(html, successCssSelector, failCssSelector, depth)
+        return getText(html, successCssSelector, failCssSelector, hasCDATA)
     }
 
     private fun getText(
         html: String,
         successCssSelector: String,
         failCssSelector: String,
-        depth: Int = 0
+        hasCDATA: Boolean,
     ): Boolean {
-        val successElement: Elements = Jsoup.parse(html).select(successCssSelector)
+        val formatHtml = if (hasCDATA) {
+            Jsoup.parse(html).select("root").text()
+        } else {
+            html
+        }
+        val successElement: Elements = Jsoup.parse(formatHtml).select(successCssSelector)
         return if (successElement.isEmpty()) {
-            val failElement: Elements = Jsoup.parse(html).select(failCssSelector)
+            val failElement: Elements = Jsoup.parse(formatHtml).select(failCssSelector)
             if (failElement.isEmpty()) {
-                if (depth == 0) {
-                    println("无法解析HTML!")
-                }
-                getText(Jsoup.parse(html).text(), successCssSelector, failCssSelector, depth - 1)
+                println("无法解析HTML!")
+                false
             } else {
                 failElement.print()
                 true
