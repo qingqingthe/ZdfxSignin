@@ -37,8 +37,13 @@ abstract class AbstractSign : Sign {
         return if (successElement.isEmpty()) {
             val failElement: Elements = Jsoup.parse(formatHtml).select(failCssSelector)
             if (failElement.isEmpty()) {
-                println("无法解析HTML!")
-                false
+                if (formatHtml.isEmpty()) {
+                    println("无法解析HTML!")
+                    false
+                } else {
+                    println(formatHtml)
+                    true
+                }
             } else {
                 failElement.print()
                 true
