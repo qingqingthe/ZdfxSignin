@@ -6,6 +6,7 @@ import com.hyosakura.signin.util.OkHttpUtil
  * @author LovesAsuna
  **/
 open class Zdfx : AbstractSign() {
+    override val name: String = "终点论坛"
     override val baseUrl = "https://bbs.zdfx.net/"
 
     override fun sign(cookie: String): Boolean {

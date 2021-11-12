@@ -6,6 +6,7 @@ import com.hyosakura.signin.util.OkHttpUtil
  * @author LovesAsuna
  **/
 class Huahuo : AbstractSign() {
+    override val name: String = "花火学园"
     override val baseUrl = "https://www.sayhuahuo.com/"
 
     override fun sign(cookie: String): Boolean {
