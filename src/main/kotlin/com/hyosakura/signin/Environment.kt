@@ -12,7 +12,7 @@ object Environment {
     }
 
     fun getCookie(key: String) : String? {
-        return cookieMap[key.uppercase()]
+        return cookieMap["${key.uppercase()}_COOKIE"]
     }
 
     init {
