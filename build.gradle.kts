@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.5.31"
+    id("application")
 }
 
 group = "com.hyosakura"
@@ -16,6 +17,10 @@ dependencies {
     implementation("org.jsoup:jsoup:1.14.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
     testImplementation(kotlin("test"))
+}
+
+application {
+    mainClass.set("com.hyosakura.signin.MainKt")
 }
 
 tasks.test {
