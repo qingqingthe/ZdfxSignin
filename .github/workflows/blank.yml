@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Checkin
+        env:
+          ZDFX_COOKIE: ${{ secrets.ZDFX_COOKIE }}
+          HUAHUO_COOKIE: ${{ secrets.HUAHUO_COOKIE }}
+        run: ./gradlew run --no-daemon
+
+
+
