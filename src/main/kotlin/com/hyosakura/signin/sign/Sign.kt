@@ -1,4 +1,4 @@
-package com.hyosakura.signin.forum
+package com.hyosakura.signin.sign
 
 /**
  * @author LovesAsuna
@@ -8,5 +8,7 @@ interface Sign {
 
     val baseUrl: String
 
-    fun sign(cookie: String): Boolean
+    val cookie: String
+
+    fun sign(): Boolean
 }

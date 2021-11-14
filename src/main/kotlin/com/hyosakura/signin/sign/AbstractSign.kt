@@ -1,4 +1,4 @@
-package com.hyosakura.signin.forum
+package com.hyosakura.signin.sign
 
 import okhttp3.Response
 import org.jsoup.Jsoup
@@ -7,7 +7,7 @@ import org.jsoup.select.Elements
 /**
  * @author LovesAsuna
  **/
-abstract class AbstractSign : Sign {
+abstract class AbstractSign(override val cookie : String) : Sign {
     fun getText(
         response: Response,
         successCssSelector: String,
