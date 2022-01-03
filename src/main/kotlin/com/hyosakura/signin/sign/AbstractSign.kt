@@ -1,6 +1,6 @@
 package com.hyosakura.signin.sign
 
-import okhttp3.Response
+import io.ktor.client.statement.*
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 
@@ -8,17 +8,13 @@ import org.jsoup.select.Elements
  * @author LovesAsuna
  **/
 abstract class AbstractSign(override val cookie : String) : Sign {
-    fun getText(
-        response: Response,
+    suspend fun getText(
+        response: HttpResponse,
         successCssSelector: String,
         failCssSelector: String,
         hasCDATA: Boolean = false
-    ): Boolean {
-        val html = response.body?.string()
-        if (html == null) {
-            println("请求失败")
-            return false
-        }
+    ): Response {
+        val html = response.readText()
         return getText(html, successCssSelector, failCssSelector, hasCDATA)
     }
 
@@ -27,7 +23,7 @@ abstract class AbstractSign(override val cookie : String) : Sign {
         successCssSelector: String,
         failCssSelector: String,
         hasCDATA: Boolean,
-    ): Boolean {
+    ): Response {
         val formatHtml = if (hasCDATA) {
             Jsoup.parse(html).select("root").text()
         } else {
@@ -38,29 +34,27 @@ abstract class AbstractSign(override val cookie : String) : Sign {
             val failElement: Elements = Jsoup.parse(formatHtml).select(failCssSelector)
             if (failElement.isEmpty()) {
                 if (formatHtml.isEmpty()) {
-                    println("无法解析HTML!")
-                    false
+                    false to "无法解析HTML!"
                 } else {
-                    println(formatHtml)
-                    true
+                    true to  formatHtml
                 }
             } else {
-                failElement.print()
-                true
+                true to failElement.trueText()
             }
         } else {
-            successElement.print()
-            true
+            true to successElement.trueText()
         }
     }
 
-    private fun Elements.print() {
+    private fun Elements.trueText(): String {
+        val builder = StringBuilder()
         forEach {
             if (it.`is`("img")) {
-                println(it.attr("alt"))
+                builder.append(it.attr("alt"))
             } else {
-                println(it.text())
+                builder.append(it.text())
             }
         }
+        return builder.toString()
     }
 }

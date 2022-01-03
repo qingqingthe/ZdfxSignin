@@ -1,6 +1,8 @@
 package com.hyosakura.signin.sign.forum.discuz
 
-import com.hyosakura.signin.util.OkHttpUtil
+import com.hyosakura.signin.sign.Response
+import com.hyosakura.signin.sign.Result
+import com.hyosakura.signin.util.Request
 
 /**
  * @author LovesAsuna
@@ -9,20 +11,21 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
     override val name: String = "终点论坛"
     override val baseUrl = "https://bbs.zdfx.net/"
 
-    override fun sign(): Boolean {
-        return lottery(cookie) && forumSign(cookie)
+    override suspend fun sign(): Result {
+        return listOf(lottery(cookie), forumSign(cookie))
     }
 
-    private fun lottery(cookie: String): Boolean {
-        val lotteryUrl = "${baseUrl}plugin.php?id=yinxingfei_zzza:yinxingfei_zzza_post"
-        val response = OkHttpUtil.post(lotteryUrl, mapOf("formhash" to formHash), OkHttpUtil.addHeaders(cookie))
-        return getText(response, ".zzza_hall_top_left_infor", "#messagetext > p:first-child")
+    private suspend fun lottery(cookie: String): Response {
+        val lotteryUrl = "${baseUrl}plugin.php?id=yinxingfei_zzza:yaoyao"
+        val response =
+            Request.submitForm(lotteryUrl, mapOf("formhash" to formHash), headers = mapOf("Cookie" to cookie))
+        return getText(response, "#res", "#res")
     }
 
-    private fun forumSign(cookie: String): Boolean {
+    private suspend fun forumSign(cookie: String): Response {
         val signUrl =
             "${baseUrl}k_misign-sign.html?operation=qiandao&format=global_usernav_extra&formhash=${formHash}&inajax=1&ajaxtarget=k_misign_topb"
-        val response = OkHttpUtil[signUrl, OkHttpUtil.addHeaders(cookie)]
+        val response = Request.get(signUrl, headers = mapOf("Cookie" to cookie))
         return getText(response, "#fx_checkin_b", "root", true)
     }
 }

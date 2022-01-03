@@ -1,7 +1,9 @@
 package com.hyosakura.signin.sign.forum.discuz
 
 import com.hyosakura.signin.sign.AbstractSign
-import com.hyosakura.signin.util.OkHttpUtil
+import com.hyosakura.signin.util.Request
+import io.ktor.client.statement.*
+import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 
 /**
@@ -9,8 +11,10 @@ import org.jsoup.Jsoup
  **/
 abstract class Discuz(cookie: String) : AbstractSign(cookie) {
     protected val formHash: String by lazy {
-        val base = Jsoup.parse(OkHttpUtil[baseUrl, OkHttpUtil.addHeaders(cookie)].body!!.string())
-        val form = base.select("#scbar_form")
-        form.select("input:nth-child(2)").attr("value")
+        runBlocking {
+            val base = Jsoup.parse(Request.get(baseUrl, headers = mapOf("Cookie" to cookie)).readText())
+            val form = base.select("#scbar_form")
+            form.select("input:nth-child(2)").attr("value")
+        }
     }
 }
