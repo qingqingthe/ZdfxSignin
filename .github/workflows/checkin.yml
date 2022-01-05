@@ -28,6 +28,9 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v0.0.0
+
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
