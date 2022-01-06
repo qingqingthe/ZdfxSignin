@@ -28,10 +28,11 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v0.0.0
-        with:
-          chromium-version: stable
+      - name: download Chrome
+        run: wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+      - name: install Chrome
+        run: sudo apt install ./google-chrome-stable_current_amd64.deb
 
       - name: download chrome ChromeDriver
         run: wget https://npm.taobao.org/mirrors/chromedriver/97.0.4692.71/chromedriver_linux64.zip
