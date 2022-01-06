@@ -30,6 +30,8 @@ jobs:
 
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v0.0.0
+        with:
+          chrome-version: stable
 
       - name: download chrome ChromeDriver
         run: wget https://npm.taobao.org/mirrors/chromedriver/97.0.4692.71/chromedriver_linux64.zip
