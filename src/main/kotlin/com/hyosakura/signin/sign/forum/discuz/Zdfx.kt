@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
 import java.time.Clock
@@ -29,7 +30,9 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
 
     private suspend fun lottery(cookie: String): Response {
         System.setProperty("webdriver.chrome.driver", "chromedriver")
-        val driver = ChromeDriver()
+        val option = ChromeOptions()
+        option.setHeadless(true)
+        val driver = ChromeDriver(option)
         driver.manage().window().maximize()
         driver.get("${baseUrl}k_misign-sign.html")
         cookie.split(";").forEach {
