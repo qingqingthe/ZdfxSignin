@@ -7,6 +7,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
+import org.openqa.selenium.WebElement
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.support.ui.ExpectedConditions
@@ -62,12 +63,20 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
         driver.navigate().refresh()
         driver.get("${baseUrl}plugin.php?id=yinxingfei_zzza:yaoyao")
         val button = driver.findElement(By.cssSelector(".num_box > .btn"))
-        getWait(Duration.ofSeconds(5)).until(ExpectedConditions.elementToBeClickable(button))
-        button.click()
-        val res = driver.findElement(By.cssSelector("#res"))
-        getWait(Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElement(res, "已经"))
-        driver.quit()
-        return true to res.text
+        val res: WebElement?
+        try {
+            getWait(Duration.ofSeconds(20)).until(ExpectedConditions.elementToBeClickable(button))
+            button.click()
+            res = driver.findElement(By.cssSelector("#res"))
+            getWait(Duration.ofSeconds(10)).until(ExpectedConditions.textToBePresentInElement(res, "已经"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false to "抽奖失败!"
+        } finally {
+            driver.quit()
+        }
+
+        return true to if (res == null) "获取消息失败!" else res.text
     }
 
     private suspend fun forumSign(cookie: String): Response {
