@@ -30,7 +30,7 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
     }
 
     private suspend fun lottery(cookie: String): Response {
-        System.setProperty("webdriver.chrome.driver", "chromedriver")
+        System.setProperty("webdriver.chrome.driver", "/usr/local/share/chrome_driver")
         val option = ChromeOptions()
         option.setHeadless(true)
         val driver = ChromeDriver(option)
