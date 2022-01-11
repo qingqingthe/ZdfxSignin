@@ -32,7 +32,6 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
     private suspend fun lottery(cookie: String): Response {
         System.setProperty("webdriver.chrome.driver", "/usr/local/share/chrome_driver/chromedriver")
         val option = ChromeOptions()
-        option.setHeadless(true)
         val driver = ChromeDriver(option)
         driver.manage().window().maximize()
         driver.get("${baseUrl}k_misign-sign.html")
