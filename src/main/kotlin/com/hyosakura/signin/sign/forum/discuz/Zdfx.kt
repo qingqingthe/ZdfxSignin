@@ -31,7 +31,7 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
     }
 
     private suspend fun lottery(cookie: String): Response {
-        System.setProperty("webdriver.chrome.driver", "\tC:\\SeleniumWebDrivers\\ChromeDriver\\chromedriver.exe")
+        System.setProperty("webdriver.chrome.driver", "C:\\SeleniumWebDrivers\\ChromeDriver\\chromedriver.exe")
         val option = ChromeOptions()
         val driver = ChromeDriver(option)
         driver.manage().window().maximize()
