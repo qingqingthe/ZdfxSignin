@@ -10,6 +10,7 @@ import org.openqa.selenium.Cookie
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
 import java.time.Clock
@@ -30,7 +31,7 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
     }
 
     private suspend fun lottery(cookie: String): Response {
-        System.setProperty("webdriver.chrome.driver", "/usr/local/share/chrome_driver/chromedriver")
+        System.setProperty("webdriver.chrome.driver", "\tC:\\SeleniumWebDrivers\\ChromeDriver\\chromedriver.exe")
         val option = ChromeOptions()
         val driver = ChromeDriver(option)
         driver.manage().window().maximize()
@@ -65,10 +66,13 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
         val res: WebElement?
         val resText: String?
         try {
+            res = driver.findElement(By.cssSelector("#res"))
+            val action = Actions(driver)
+            action.moveToElement(button).clickAndHold().release().build().perform()
             getWait(Duration.ofSeconds(20)).until(ExpectedConditions.elementToBeClickable(button))
             button.click()
-            res = driver.findElement(By.cssSelector("#res"))
-            getWait(Duration.ofSeconds(10)).until(ExpectedConditions.textToBePresentInElement(res, "已经"))
+            action.moveToElement(res).clickAndHold().release().build().perform()
+            getWait(Duration.ofSeconds(20)).until(ExpectedConditions.textToBePresentInElement(res, "已经"))
             resText = res.text
         } catch (e: Exception) {
             e.printStackTrace()
