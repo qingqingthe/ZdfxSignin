@@ -64,19 +64,20 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
         driver.get("${baseUrl}plugin.php?id=yinxingfei_zzza:yaoyao")
         val button = driver.findElement(By.cssSelector(".num_box > .btn"))
         val res: WebElement?
+        val resText: String?
         try {
             getWait(Duration.ofSeconds(20)).until(ExpectedConditions.elementToBeClickable(button))
             button.click()
             res = driver.findElement(By.cssSelector("#res"))
             getWait(Duration.ofSeconds(10)).until(ExpectedConditions.textToBePresentInElement(res, "已经"))
+            resText = res.text
         } catch (e: Exception) {
             e.printStackTrace()
             return false to "抽奖失败!"
         } finally {
             driver.quit()
         }
-
-        return true to if (res == null) "获取消息失败!" else res.text
+        return true to (resText ?: "获取消息失败!")
     }
 
     private suspend fun forumSign(cookie: String): Response {
