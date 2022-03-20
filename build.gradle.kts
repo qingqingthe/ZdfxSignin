@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm") version "1.6.10"
     id("application")
@@ -17,19 +15,20 @@ dependencies {
     implementation("io.ktor:ktor-client-okhttp:1.6.7")
     implementation("org.jsoup:jsoup:1.14.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
-    implementation("org.seleniumhq.selenium:selenium-java:4.1.1")
-    implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.1.1")
+    implementation("org.seleniumhq.selenium:selenium-java:4.1.2")
+    implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.1.2")
     testImplementation(kotlin("test"))
 }
 
 application {
     mainClass.set("com.hyosakura.signin.MainKt")
+    applicationDefaultJvmArgs = listOf("-Dfile.encoding=UTF-8")
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<KotlinCompile>() {
+tasks.compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
