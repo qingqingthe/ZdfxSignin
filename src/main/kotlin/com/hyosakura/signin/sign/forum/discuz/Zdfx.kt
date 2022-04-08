@@ -1,92 +1,82 @@
 package com.hyosakura.signin.sign.forum.discuz
 
-import com.hyosakura.signin.sign.Response
-import com.hyosakura.signin.sign.Result
-import com.hyosakura.signin.util.Request
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import com.hyosakura.signin.util.Formatter
 import org.openqa.selenium.By
-import org.openqa.selenium.Cookie
+import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.chrome.ChromeOptions
-import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.ExpectedConditions
-import org.openqa.selenium.support.ui.WebDriverWait
-import java.time.Clock
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.util.*
 
 /**
  * @author LovesAsuna
  **/
 open class Zdfx(cookie: String) : Discuz(cookie) {
-    override val name: String = "终点论坛"
+    override val name: String = "Zdfx"
     override val baseUrl = "https://bbs.zdfx.net/"
 
-    override suspend fun sign(): Result {
-        return listOf(lottery(cookie), forumSign(cookie))
+    override suspend fun sign(): Boolean {
+        var result = true
+        val driver = startDriver()
+        logger.append(Formatter.outlineFormat(name, "=")).append("\n")
+        phase("start signing action on $name") {
+            result = result && forumSign(driver)
+        }
+
+        phase("start lottery action on $name") {
+            result = result && lottery(driver)
+        }
+        driver.quit()
+        logger.append(Formatter.outlineFormat("", "="))
+        println(logger.toString())
+        return result
     }
 
-    private suspend fun lottery(cookie: String): Response {
-        System.setProperty("webdriver.chrome.driver", "C:\\SeleniumWebDrivers\\ChromeDriver\\chromedriver.exe")
-        val option = ChromeOptions()
-        val driver = ChromeDriver(option)
-        driver.manage().window().maximize()
-        driver.get("${baseUrl}k_misign-sign.html")
-        cookie.split(";").forEach {
-            val entry = it.split("=")
-            driver.manage().addCookie(
-                Cookie(
-                    entry[0].trim(), entry[1].trim(), "bbs.zdfx.net", "/", Date.from(
-                        LocalDateTime.now().plusDays(1).toInstant(
-                            ZoneOffset.UTC
-                        )
-                    )
-                )
-            )
-        }
-         fun getWait(timeout: Duration): WebDriverWait {
-            return WebDriverWait(
-                driver,
-                timeout,
-                Duration.ofMillis(500L),
-                Clock.systemDefaultZone()
-            ) { duration ->
-                runBlocking {
-                    delay(duration.toMillis())
-                }
-            }
-        }
-        driver.navigate().refresh()
+    private fun lottery(driver: WebDriver): Boolean {
         driver.get("${baseUrl}plugin.php?id=yinxingfei_zzza:yaoyao")
         val button = driver.findElement(By.cssSelector(".num_box > .btn"))
         val res: WebElement?
         val resText: String?
         try {
             res = driver.findElement(By.cssSelector("#res"))
-            val action = Actions(driver)
-            action.moveToElement(button).clickAndHold().release().build().perform()
-            getWait(Duration.ofSeconds(20)).until(ExpectedConditions.elementToBeClickable(button))
+            val originText = res.text
+            driver.wait(Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(button))
             button.click()
-            action.moveToElement(res).clickAndHold().release().build().perform()
-            getWait(Duration.ofSeconds(20)).until(ExpectedConditions.textToBePresentInElement(res, "已经"))
+            driver.wait(Duration.ofSeconds(10)).until(ExpectedConditions.not(ExpectedConditions.textToBePresentInElement(res, originText)))
             resText = res.text
         } catch (e: Exception) {
             e.printStackTrace()
-            return false to "抽奖失败!"
-        } finally {
-            driver.quit()
+            logger.append("lottery failed")
+            return false
         }
-        return true to (resText ?: "获取消息失败!")
+        logger.append(resText)
+        return true
     }
 
-    private suspend fun forumSign(cookie: String): Response {
-        val signUrl =
-            "${baseUrl}k_misign-sign.html?operation=qiandao&format=global_usernav_extra&formhash=${formHash}&inajax=1&ajaxtarget=k_misign_topb"
-        val response = Request.get(signUrl, headers = mapOf("Cookie" to cookie))
-        return getText(response, "#fx_checkin_b", "root", true)
+    private fun forumSign(driver: WebDriver): Boolean {
+        driver.get("${baseUrl}k_misign-sign.html")
+        try {
+            val list = driver.findElements(By.cssSelector("#JD_sign"))
+            if (list.isEmpty()) {
+                logger.append("already signed in!")
+                return true
+            }
+            val button = list[0]
+            // TODO get success text
+            driver.wait(Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(button))
+            button.click()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            logger.append("sign in failed!")
+            return false
+        }
+        return true
+    }
+
+    override fun prePhase(phase: String) {
+        logger.append(phase).append("\n")
+    }
+
+    override fun postPhase(phase: String) {
+        logger.append("\n")
     }
 }
