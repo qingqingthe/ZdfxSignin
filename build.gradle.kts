@@ -11,12 +11,12 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-client-core:1.6.7")
-    implementation("io.ktor:ktor-client-okhttp:1.6.7")
+    implementation("io.ktor:ktor-client-core:1.6.8")
+    implementation("io.ktor:ktor-client-okhttp:1.6.8")
     implementation("org.jsoup:jsoup:1.14.3")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
-    implementation("org.seleniumhq.selenium:selenium-java:4.1.2")
-    implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.1.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
+    implementation("org.seleniumhq.selenium:selenium-java:4.1.3")
+    implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.1.3")
     testImplementation(kotlin("test"))
 }
 
