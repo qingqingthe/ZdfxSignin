@@ -18,6 +18,7 @@ class Huahuo(cookie: String) : Discuz(cookie) {
             result = result &&  forumSign()
         }
         logger.append(Formatter.outlineFormat("", "="))
+        println(logger.toString())
         return result
     }
 
@@ -31,7 +32,6 @@ class Huahuo(cookie: String) : Discuz(cookie) {
         )
         val result = getText(response, "div.c", "div.c", true)
         logger.append(result.second)
-        println(logger.toString())
         return result.first
     }
 
