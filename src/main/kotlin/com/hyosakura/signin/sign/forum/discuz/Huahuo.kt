@@ -13,7 +13,7 @@ class Huahuo(cookie: String) : Discuz(cookie) {
 
     override suspend fun sign(): Boolean {
         var result = true
-        logger.append(Formatter.outlineFormat(name, "="))
+        logger.append(Formatter.outlineFormat(name, "=")).append("\n")
         phase("start signing action on $name") {
             result = result &&  forumSign()
         }
