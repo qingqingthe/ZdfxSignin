@@ -15,11 +15,11 @@ jobs:
       - name: Sync with upstream
         if: github.repository != 'LovesAsuna/ForumSignin'
         continue-on-error: true
-        uses: aormsby/Fork-Sync-With-Upstream-action@v3.1
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.2
         with:
-          upstream_repository: LovesAsuna/ForumSignin
-          upstream_branch: master
-          target_branch: master
+          upstream_sync_repo: LovesAsuna/ForumSignin
+          upstream_sync_branch: master
+          target_sync_branch: master
           git_pull_args: '-s recursive -Xtheirs'
 
       - uses: actions/setup-java@v2
