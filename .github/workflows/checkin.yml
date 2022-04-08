@@ -20,7 +20,8 @@ jobs:
           upstream_sync_repo: LovesAsuna/ForumSignin
           upstream_sync_branch: master
           target_sync_branch: master
-          git_pull_args: '-s recursive -Xtheirs'
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_pull_args: '-s recursive -Xtheirs'
 
       - uses: actions/setup-java@v2
         with:
