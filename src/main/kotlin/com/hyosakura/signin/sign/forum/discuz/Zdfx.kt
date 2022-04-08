@@ -4,6 +4,7 @@ import com.hyosakura.signin.util.Formatter
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
+import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.ExpectedConditions
 import java.time.Duration
 
@@ -39,8 +40,11 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
         try {
             res = driver.findElement(By.cssSelector("#res"))
             val originText = res.text
-            driver.wait(Duration.ofSeconds(20)).until(ExpectedConditions.elementToBeClickable(button))
+            val action = Actions(driver)
+            action.moveToElement(button).build().perform()
+            driver.wait(Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(button))
             button.click()
+            action.moveToElement(res).build().perform()
             driver.wait(Duration.ofSeconds(10)).until(ExpectedConditions.not(ExpectedConditions.textToBePresentInElement(res, originText)))
             resText = res.text
         } catch (e: Exception) {
