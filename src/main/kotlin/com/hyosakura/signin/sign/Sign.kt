@@ -10,8 +10,5 @@ interface Sign {
 
     val cookie: String
 
-    suspend fun sign(): Result
+    suspend fun sign(): Boolean
 }
-
-typealias Response = Pair<Boolean, String>
-typealias Result = List<Response>
