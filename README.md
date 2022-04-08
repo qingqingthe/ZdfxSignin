@@ -1,4 +1,3 @@
-# 要不跑路吧
 ## GalGame论坛签到
 目前支持的论坛有:
 * [终点论坛](https://bbs.zdfx.net/)
