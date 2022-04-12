@@ -41,10 +41,10 @@ open class Zdfx(cookie: String) : Discuz(cookie) {
             res = driver.findElement(By.cssSelector("#res"))
             val originText = res.text
             val action = Actions(driver)
-            action.moveToElement(button).build().perform()
+            action.moveToElement(button).clickAndHold().release().build().perform()
             driver.wait(Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(button))
             button.click()
-            action.moveToElement(res).build().perform()
+            action.moveToElement(res).clickAndHold().release().build().perform()
             driver.wait(Duration.ofSeconds(10)).until(ExpectedConditions.not(ExpectedConditions.textToBePresentInElement(res, originText)))
             resText = res.text
         } catch (e: Exception) {
