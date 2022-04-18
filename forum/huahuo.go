@@ -62,7 +62,7 @@ func (huahuo *Huahuo) Sign() (<-chan string, bool) {
 		if err != nil {
 			c <- err.Error()
 		}
-		c <- util.GetText(res, "div.c", "div.c", true)
+		c <- util.GetText(res, "div.c", "div.c")
 	}()
 	return c, true
 }
