@@ -31,4 +31,5 @@ jobs:
         env:
           ZDFX_COOKIE: ${{ secrets.ZDFX_COOKIE }}
           HUAHUO_COOKIE: ${{ secrets.HUAHUO_COOKIE }}
+          DEBUG: ${{ secrets.DEBUG }}
         run: go run .
