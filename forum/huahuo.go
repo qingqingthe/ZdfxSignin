@@ -53,7 +53,7 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 	go func() {
 		Debug("尝试获取", huahuo.name, "的hash")
 		hash, ok := huahuo.FormHash()
-		Debug("尝试结果", hash, ok)
+		Debug("hash结果:", hash, ok)
 		if !ok {
 			hashChannel <- ""
 		} else {
