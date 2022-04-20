@@ -19,3 +19,4 @@
 .idea
 ForumSignin.iml
 forum/huahuo_test.go
+forum/zdfx_test.go
