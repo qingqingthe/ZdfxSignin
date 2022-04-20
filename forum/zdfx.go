@@ -51,12 +51,6 @@ func NewZdfxClient() Sign {
 }
 
 func (zdfx *Zdfx) Sign() (<-chan string, bool) {
-	if len(zdfx.cookie) == 0 {
-		c := make(chan string, 1)
-		c <- zdfx.name + "Cookie未设置！"
-		close(c)
-		return c, false
-	}
 	c := make(chan string)
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -66,6 +60,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 	}()
 
 	go func() {
+		Debug("模拟", zdfx.name, "的签到操作")
 		ctx, _ := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 		zdfx.signInternal(ctx, c)
@@ -74,6 +69,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 	}()
 
 	go func() {
+		Debug("模拟", zdfx.name, "的摇奖操作")
 		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 		zdfx.lottery(ctx, c)
 		cancel()
@@ -110,11 +106,13 @@ func (zdfx *Zdfx) cookieSlice() chromedp.Action {
 }
 
 func (zdfx *Zdfx) signInternal(ctx context.Context, c chan<- string) {
+	Debug(zdfx.name, "模拟签到操作启动浏览器")
 	err := chromedp.Run(ctx,
 		zdfx.cookieSlice(),
 		chromedp.Navigate(`https://bbs.zdfx.net/k_misign-sign.html`),
 		chromedp.Click(`#JD_sign`),
 	)
+	Debug(zdfx.name, "模拟签到操作完成，获取结果")
 	if err != nil {
 		if err == context.DeadlineExceeded {
 			c <- "已签到"
@@ -125,6 +123,7 @@ func (zdfx *Zdfx) signInternal(ctx context.Context, c chan<- string) {
 }
 
 func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
+	Debug(zdfx.name, "模拟摇奖操作启动浏览器")
 	var res string
 	err := chromedp.Run(ctx,
 		zdfx.cookieSlice(),
@@ -133,6 +132,7 @@ func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
 		chromedp.Sleep(1500*time.Millisecond),
 		chromedp.InnerHTML(`div #res`, &res),
 	)
+	Debug(zdfx.name, "模拟摇将操作完成，获取结果")
 	if err != nil {
 		c <- err.Error()
 	} else {

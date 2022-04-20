@@ -51,7 +51,9 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 	data := make(url.Values)
 	hashChannel := make(chan string)
 	go func() {
+		Debug("尝试获取", huahuo.name, "的hash")
 		hash, ok := huahuo.FormHash()
+		Debug("尝试结果", hash, ok)
 		if !ok {
 			hashChannel <- ""
 		} else {
@@ -67,7 +69,9 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 		return nil, false
 	}
 	data["formhash"] = []string{hash}
+	Debug("建立", huahuo.name, "的签到请求")
 	req, err := http.NewRequest("POST", signUrl, strings.NewReader(data.Encode()))
+	Debug("请求结果", err == nil)
 	if err != nil {
 		return nil, false
 	}
@@ -75,10 +79,12 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	c := make(chan string)
 	go func() {
+		Debug("发送", huahuo.name, "的签到请求")
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			c <- err.Error()
 		}
+		Debug("获取", huahuo.name, "的签到结果")
 		c <- util.GetText(res, "div.c", "div.c")
 		close(c)
 	}()
