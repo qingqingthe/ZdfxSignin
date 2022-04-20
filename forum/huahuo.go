@@ -4,32 +4,48 @@ import (
 	"github.com/LovesAsuna/ForumSignin/util"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
-type Huahuo struct {
+type huahuo struct {
 	name,
 	baseUrl,
 	cookie string
 }
 
-func (huahuo *Huahuo) FormHash() (string, bool) {
+func (huahuo *huahuo) FormHash() (string, bool) {
 	return FormHash(huahuo)
 }
 
-func (huahuo *Huahuo) Name() string {
+func (huahuo *huahuo) Name() string {
 	return huahuo.name
 }
 
-func (huahuo *Huahuo) BasicUrl() string {
+func (huahuo *huahuo) BasicUrl() string {
 	return huahuo.baseUrl
 }
 
-func (huahuo *Huahuo) Cookie() string {
+func (huahuo *huahuo) Cookie() string {
 	return huahuo.cookie
 }
 
-func (huahuo *Huahuo) Sign() (<-chan string, bool) {
+func NewHuaHuoClient() Sign {
+	cookie := os.Getenv("HUAHUO_COOKIE")
+	name := "花火"
+	baseUrl := "https://www.sayhuahuo.com/"
+	if len(cookie) == 0 {
+		return NewNoCookieClient(name)
+	}
+	client := huahuo{
+		name,
+		baseUrl,
+		cookie,
+	}
+	return &client
+}
+
+func (huahuo *huahuo) Sign() (<-chan string, bool) {
 	signUrl := huahuo.baseUrl + "plugin.php?id=dsu_paulsign:sign&operation=qiandao&infloat=1&inajax=1"
 	data := make(url.Values)
 	hashChannel := make(chan string)
@@ -63,6 +79,7 @@ func (huahuo *Huahuo) Sign() (<-chan string, bool) {
 			c <- err.Error()
 		}
 		c <- util.GetText(res, "div.c", "div.c")
+		close(c)
 	}()
 	return c, true
 }

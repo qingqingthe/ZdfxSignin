@@ -1,18 +1,28 @@
 package main
 
-import "fmt"
+import (
+	"github.com/LovesAsuna/ForumSignin/forum"
+	"log"
+	"sync"
+)
+
+type client []forum.Sign
 
 func main() {
-	b := []int{0, 0}
-	test(b)
-	test2(&b)
-	fmt.Println(b)
-}
-
-func test(b []int) {
-	b[0] = 1
-}
-
-func test2(b *[]int) {
-	(*b)[1] = 2
+	clients := client{
+		forum.NewHuaHuoClient(),
+		forum.NewZdfxClient(),
+	}
+	wg := sync.WaitGroup{}
+	for _, client := range clients {
+		wg.Add(1)
+		go func(client forum.Sign) {
+			c, _ := client.Sign()
+			for m := range c {
+				log.Println(m)
+			}
+			wg.Done()
+		}(client)
+	}
+	wg.Wait()
 }
