@@ -80,7 +80,7 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 	c := make(chan string)
 	go func() {
 		Debug("发送", huahuo.name, "的签到请求")
-		res, err := http.DefaultClient.Do(req)
+		res, err := client.Do(req)
 		if err != nil {
 			c <- err.Error()
 		}
