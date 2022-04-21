@@ -2,6 +2,7 @@ package util
 
 import (
 	"bytes"
+	"github.com/LovesAsuna/ForumSignin/forum"
 	"github.com/PuerkitoBio/goquery"
 	"net/http"
 	"strings"
@@ -14,6 +15,7 @@ func GetText(res *http.Response, success string, fail string) string {
 		return err.Error()
 	}
 	html := buf.String()
+	forum.Debug("GetText结果:", html)
 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if element := doc.Find(success); element.Size() == 0 {
 		if element = doc.Find(fail); element.Size() != 0 {
