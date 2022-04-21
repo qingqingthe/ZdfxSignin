@@ -2,6 +2,7 @@ package forum
 
 import (
 	"context"
+	"github.com/LovesAsuna/ForumSignin/util"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
@@ -41,7 +42,7 @@ func NewZdfxClient() Sign {
 	if len(cookie) == 0 {
 		return NewNoCookieClient(name)
 	}
-	Debug(name, "cookie:", cookie)
+	util.Debug(name, "cookie:", cookie)
 	client := Zdfx{
 		name,
 		baseUrl,
@@ -60,7 +61,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 	}()
 
 	go func() {
-		Debug("模拟", zdfx.name, "的签到操作")
+		util.Debug("模拟", zdfx.name, "的签到操作")
 		ctx, _ := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 		zdfx.signInternal(ctx, c)
@@ -69,7 +70,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 	}()
 
 	go func() {
-		Debug("模拟", zdfx.name, "的摇奖操作")
+		util.Debug("模拟", zdfx.name, "的摇奖操作")
 		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 		zdfx.lottery(ctx, c)
 		cancel()
@@ -106,13 +107,13 @@ func (zdfx *Zdfx) cookieSlice() chromedp.Action {
 }
 
 func (zdfx *Zdfx) signInternal(ctx context.Context, c chan<- string) {
-	Debug(zdfx.name, "模拟签到操作启动浏览器")
+	util.Debug(zdfx.name, "模拟签到操作启动浏览器")
 	err := chromedp.Run(ctx,
 		zdfx.cookieSlice(),
-		chromedp.Navigate(`https://bbs.zdfx.net/k_misign-sign.html`),
+		chromedp.Navigate(zdfx.baseUrl+`k_misign-sign.html`),
 		chromedp.Click(`#JD_sign`),
 	)
-	Debug(zdfx.name, "模拟签到操作完成，获取结果")
+	util.Debug(zdfx.name, "模拟签到操作完成，获取结果")
 	if err != nil {
 		if err == context.DeadlineExceeded {
 			c <- "已签到"
@@ -123,7 +124,7 @@ func (zdfx *Zdfx) signInternal(ctx context.Context, c chan<- string) {
 }
 
 func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
-	Debug(zdfx.name, "模拟摇奖操作启动浏览器")
+	util.Debug(zdfx.name, "模拟摇奖操作启动浏览器")
 	var res string
 	err := chromedp.Run(ctx,
 		zdfx.cookieSlice(),
@@ -132,7 +133,7 @@ func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
 		chromedp.Sleep(1500*time.Millisecond),
 		chromedp.InnerHTML(`div #res`, &res),
 	)
-	Debug(zdfx.name, "模拟摇将操作完成，获取结果")
+	util.Debug(zdfx.name, "模拟摇将操作完成，获取结果")
 	if err != nil {
 		c <- err.Error()
 	} else {
