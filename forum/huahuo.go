@@ -77,6 +77,7 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 	}
 	req.Header.Set("Cookie", huahuo.cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
 	c := make(chan string)
 	go func() {
 		util.Debug("发送", huahuo.name, "的签到请求")
