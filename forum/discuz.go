@@ -20,6 +20,7 @@ func FormHash(discuz Discuz) (string, bool) {
 	}
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
+		Debug(doc.Html())
 		return err.Error(), false
 	}
 	return doc.Find("#scbar_form").Find("input:nth-child(2)").Attr("value")
