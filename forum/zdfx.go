@@ -63,7 +63,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 	go func() {
 		util.Debug("模拟", zdfx.name, "的签到操作")
 		ctx, _ := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
-		ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		zdfx.signInternal(ctx, c)
 		cancel()
 		wg.Done()
@@ -130,7 +130,7 @@ func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
 		zdfx.cookieSlice(),
 		chromedp.Navigate(zdfx.baseUrl+`plugin.php?id=yinxingfei_zzza:yaoyao`),
 		chromedp.Click(`.num_box > .btn`, chromedp.NodeVisible),
-		chromedp.Sleep(1500*time.Millisecond),
+		chromedp.Sleep(2500*time.Millisecond),
 		chromedp.InnerHTML(`div #res`, &res),
 	)
 	util.Debug(zdfx.name, "模拟摇将操作完成，获取结果")
