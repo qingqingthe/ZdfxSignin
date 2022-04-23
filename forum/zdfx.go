@@ -63,7 +63,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 	go func() {
 		util.Debug("模拟", zdfx.name, "的签到操作")
 		ctx, _ := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
-		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		zdfx.signInternal(ctx, c)
 		cancel()
 		wg.Done()
