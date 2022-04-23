@@ -130,7 +130,7 @@ func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
 		zdfx.cookieSlice(),
 		chromedp.Navigate(zdfx.baseUrl+`plugin.php?id=yinxingfei_zzza:yaoyao`),
 		chromedp.Click(`.num_box > .btn`, chromedp.NodeVisible),
-		chromedp.Sleep(2500*time.Millisecond),
+		chromedp.Sleep(5*time.Second),
 		chromedp.InnerHTML(`div #res`, &res),
 	)
 	util.Debug(zdfx.name, "模拟摇将操作完成，获取结果")
