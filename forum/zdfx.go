@@ -111,7 +111,7 @@ func (zdfx *Zdfx) signInternal(ctx context.Context, c chan<- string) {
 	err := chromedp.Run(ctx,
 		zdfx.cookieSlice(),
 		chromedp.Navigate(zdfx.baseUrl+`k_misign-sign.html`),
-		chromedp.Click(`#JD_sign`),
+		chromedp.Click(`#JD_sign`, chromedp.NodeVisible),
 	)
 	util.Debug(zdfx.name, "模拟签到操作完成，获取结果")
 	if err != nil {
