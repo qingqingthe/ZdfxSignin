@@ -2,8 +2,10 @@ package forum
 
 import (
 	"context"
+	"fmt"
 	"github.com/LovesAsuna/ForumSignin/util"
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 	"log"
@@ -62,9 +64,8 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 
 	go func() {
 		util.Debug("模拟", zdfx.name, "的签到操作")
-		ctx, _ := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		zdfx.signInternal(ctx, c)
+		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
+		zdfx.signInternal(ctx, cancel, c)
 		cancel()
 		wg.Done()
 	}()
@@ -106,16 +107,42 @@ func (zdfx *Zdfx) cookieSlice() chromedp.Action {
 	)
 }
 
-func (zdfx *Zdfx) signInternal(ctx context.Context, c chan<- string) {
+func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c chan<- string) {
 	util.Debug(zdfx.name, "模拟签到操作启动浏览器")
+	sel := `#JD_sign`
+	cn := 0
+	by := chromedp.ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
+		cn++
+		if cn >= 500 {
+			errString := "操作超时，签到成功"
+			util.Debug(errString)
+			cancel()
+			return nil, fmt.Errorf(errString)
+		}
+		id, count, err := dom.PerformSearch(sel).Do(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		if count < 1 {
+			return []cdp.NodeID{}, nil
+		}
+
+		nodes, err := dom.GetSearchResults(id, 0, count).Do(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		return nodes, nil
+	})
 	err := chromedp.Run(ctx,
 		zdfx.cookieSlice(),
 		chromedp.Navigate(zdfx.baseUrl+`k_misign-sign.html`),
-		chromedp.Click(`#JD_sign`, chromedp.NodeVisible),
+		chromedp.Click(sel, by),
 	)
 	util.Debug(zdfx.name, "模拟签到操作完成，获取结果")
 	if err != nil {
-		if err == context.DeadlineExceeded {
+		if err == context.Canceled {
 			c <- "已签到"
 		} else {
 			c <- err.Error()
