@@ -3,7 +3,7 @@ package util
 import (
 	"bytes"
 	"github.com/PuerkitoBio/goquery"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,7 +17,7 @@ func GetText(res *http.Response, success string, fail string) string {
 		return err.Error()
 	}
 	html := buf.String()
-	Debug("GetText结果:", html)
+	log.Debug("GetText结果:", html)
 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if element := doc.Find(success); element.Size() == 0 {
 		if element = doc.Find(fail); element.Size() != 0 {
@@ -30,20 +30,8 @@ func GetText(res *http.Response, success string, fail string) string {
 	}
 }
 
-var debug = func() bool {
-	flag := os.Getenv("DEBUG")
-	if len(flag) == 0 {
-		return false
-	}
-	debug, err := strconv.ParseBool(flag)
-	if err != nil {
-		return false
-	}
-	return debug
-}()
-
-func Debug(v ...any) {
-	if debug {
-		log.Println(v...)
+func init() {
+	if ok, _ := strconv.ParseBool(os.Getenv("DEBUG")); ok {
+		log.SetLevel(log.DebugLevel)
 	}
 }

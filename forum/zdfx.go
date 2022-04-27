@@ -3,12 +3,11 @@ package forum
 import (
 	"context"
 	"fmt"
-	"github.com/LovesAsuna/ForumSignin/util"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"strings"
 	"sync"
@@ -44,7 +43,7 @@ func NewZdfxClient() Sign {
 	if len(cookie) == 0 {
 		return NewNoCookieClient(name)
 	}
-	util.Debug(name, "cookie:", cookie)
+	log.Debug(name, "cookie:", cookie)
 	client := Zdfx{
 		name,
 		baseUrl,
@@ -63,7 +62,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 	}()
 
 	go func() {
-		util.Debug("模拟", zdfx.name, "的签到操作")
+		log.Debug("模拟", zdfx.name, "的签到操作")
 		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 		zdfx.signInternal(ctx, cancel, c)
 		cancel()
@@ -71,7 +70,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 	}()
 
 	go func() {
-		util.Debug("模拟", zdfx.name, "的摇奖操作")
+		log.Debug("模拟", zdfx.name, "的摇奖操作")
 		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 		zdfx.lottery(ctx, c)
 		cancel()
@@ -108,14 +107,14 @@ func (zdfx *Zdfx) cookieSlice() chromedp.Action {
 }
 
 func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c chan<- string) {
-	util.Debug(zdfx.name, "模拟签到操作启动浏览器")
+	log.Debug(zdfx.name, "模拟签到操作启动浏览器")
 	sel := `#JD_sign`
 	cn := 0
 	by := chromedp.ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
 		cn++
 		if cn >= 500 {
 			errString := "操作超时，签到成功"
-			util.Debug(errString)
+			log.Debug(errString)
 			cancel()
 			return nil, fmt.Errorf(errString)
 		}
@@ -140,18 +139,20 @@ func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c
 		chromedp.Navigate(zdfx.baseUrl+`k_misign-sign.html`),
 		chromedp.Click(sel, by),
 	)
-	util.Debug(zdfx.name, "模拟签到操作完成，获取结果")
+	log.Debug(zdfx.name, "模拟签到操作完成，获取结果")
 	if err != nil {
 		if err == context.Canceled {
 			c <- "已签到"
 		} else {
 			c <- err.Error()
 		}
+	} else {
+		c <- "已签到"
 	}
 }
 
 func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
-	util.Debug(zdfx.name, "模拟摇奖操作启动浏览器")
+	log.Debug(zdfx.name, "模拟摇奖操作启动浏览器")
 	var res string
 	err := chromedp.Run(ctx,
 		zdfx.cookieSlice(),
@@ -160,7 +161,7 @@ func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
 		chromedp.Sleep(5*time.Second),
 		chromedp.InnerHTML(`div #res`, &res),
 	)
-	util.Debug(zdfx.name, "模拟摇将操作完成，获取结果")
+	log.Debug(zdfx.name, "模拟摇将操作完成，获取结果")
 	if err != nil {
 		c <- err.Error()
 	} else {

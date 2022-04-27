@@ -2,6 +2,7 @@ package forum
 
 import (
 	"github.com/LovesAsuna/ForumSignin/util"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"os"
@@ -37,7 +38,7 @@ func NewHuaHuoClient() Sign {
 	if len(cookie) == 0 {
 		return NewNoCookieClient(name)
 	}
-	util.Debug(name, "cookie:", cookie)
+	log.Debug(name, "cookie:", cookie)
 	client := huahuo{
 		name,
 		baseUrl,
@@ -51,9 +52,9 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 	data := make(url.Values)
 	hashChannel := make(chan string)
 	go func() {
-		util.Debug("尝试获取", huahuo.name, "的hash")
+		log.Debug("尝试获取", huahuo.name, "的hash")
 		hash, ok := huahuo.FormHash()
-		util.Debug("hash结果:", hash, ok)
+		log.Debug("hash结果:", hash, ok)
 		if !ok {
 			hashChannel <- ""
 		} else {
@@ -69,9 +70,9 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 		return nil, false
 	}
 	data["formhash"] = []string{hash}
-	util.Debug("建立", huahuo.name, "的签到请求")
+	log.Debug("建立", huahuo.name, "的签到请求")
 	req, err := http.NewRequest("POST", signUrl, strings.NewReader(data.Encode()))
-	util.Debug("请求结果", err == nil)
+	log.Debug("请求结果", err == nil)
 	if err != nil {
 		return nil, false
 	}
@@ -80,12 +81,12 @@ func (huahuo *huahuo) Sign() (<-chan string, bool) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
 	c := make(chan string)
 	go func() {
-		util.Debug("发送", huahuo.name, "的签到请求")
+		log.Debug("发送", huahuo.name, "的签到请求")
 		res, err := client.Do(req)
 		if err != nil {
 			c <- err.Error()
 		}
-		util.Debug("获取", huahuo.name, "的签到结果")
+		log.Debug("获取", huahuo.name, "的签到结果")
 		c <- util.GetText(res, "div.c", "div.c")
 		close(c)
 	}()
