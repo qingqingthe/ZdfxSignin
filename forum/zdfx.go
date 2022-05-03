@@ -65,7 +65,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 		log.Debug("模拟", zdfx.name, "的签到操作")
 		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 		zdfx.signInternal(ctx, cancel, c)
-		cancel()
+		defer cancel()
 		wg.Done()
 	}()
 
@@ -73,7 +73,7 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 		log.Debug("模拟", zdfx.name, "的摇奖操作")
 		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 		zdfx.lottery(ctx, c)
-		cancel()
+		defer cancel()
 		wg.Done()
 	}()
 	return c, true
@@ -108,10 +108,11 @@ func (zdfx *Zdfx) cookieSlice() chromedp.Action {
 
 func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c chan<- string) {
 	log.Debug(zdfx.name, "模拟签到操作启动浏览器")
-	sel := `#JD_sign`
+	sel := `#wp #JD_sign`
 	cn := 0
 	by := chromedp.ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
 		cn++
+		fmt.Println(cn)
 		if cn >= 500 {
 			errString := "操作超时，签到成功"
 			log.Debug(errString)
@@ -137,7 +138,7 @@ func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c
 	err := chromedp.Run(ctx,
 		zdfx.cookieSlice(),
 		chromedp.Navigate(zdfx.baseUrl+`k_misign-sign.html`),
-		chromedp.Click(sel, by),
+		chromedp.Click(sel, by, chromedp.NodeReady),
 	)
 	log.Debug(zdfx.name, "模拟签到操作完成，获取结果")
 	if err != nil {
