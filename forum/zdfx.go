@@ -112,7 +112,6 @@ func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c
 	cn := 0
 	by := chromedp.ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
 		cn++
-		fmt.Println(cn)
 		if cn >= 500 {
 			errString := "操作超时，签到成功"
 			log.Debug(errString)
@@ -139,6 +138,7 @@ func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c
 		zdfx.cookieSlice(),
 		chromedp.Navigate(zdfx.baseUrl+`k_misign-sign.html`),
 		chromedp.Click(sel, by, chromedp.NodeReady),
+		chromedp.Reload(),
 	)
 	log.Debug(zdfx.name, "模拟签到操作完成，获取结果")
 	if err != nil {
