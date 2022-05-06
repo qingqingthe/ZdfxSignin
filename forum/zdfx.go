@@ -145,7 +145,7 @@ func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c
 		if err == context.Canceled {
 			c <- "已签到"
 		} else {
-			c <- err.Error()
+			log.Panic(err)
 		}
 	} else {
 		c <- "已签到"
@@ -164,6 +164,7 @@ func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
 	)
 	log.Debug(zdfx.name, "模拟摇将操作完成，获取结果")
 	if err != nil {
+		log.Panic(err)
 		c <- err.Error()
 	} else {
 		c <- res
