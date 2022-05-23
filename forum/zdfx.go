@@ -2,12 +2,16 @@ package forum
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/LovesAsuna/ForumSignin/util"
 	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	log "github.com/sirupsen/logrus"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -43,7 +47,6 @@ func NewZdfxClient() Sign {
 	if len(cookie) == 0 {
 		return NewNoCookieClient(name)
 	}
-	log.Debug(name, "cookie:", cookie)
 	client := Zdfx{
 		name,
 		baseUrl,
@@ -52,7 +55,7 @@ func NewZdfxClient() Sign {
 	return &client
 }
 
-func (zdfx *Zdfx) Sign() (<-chan string, bool) {
+func (zdfx *Zdfx) Do() (<-chan string, bool) {
 	c := make(chan string)
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -61,26 +64,35 @@ func (zdfx *Zdfx) Sign() (<-chan string, bool) {
 		close(c)
 	}()
 
+	log.Debug("获取"+zdfx.name, "的hash和token")
+	params, err := params(zdfx)
+	if err != nil {
+		go func() {
+			c <- err.Error()
+			wg.Add(-2)
+		}()
+		return c, false
+	}
+	hash := params[0]
+	token := params[1]
+	log.Debug(zdfx.name, "hash: ", hash)
+	log.Debug(zdfx.name, "token: ", token)
 	go func() {
 		log.Debug("模拟", zdfx.name, "的签到操作")
-		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
-		zdfx.signInternal(ctx, cancel, c)
-		defer cancel()
+		zdfx.sign(c, hash, token)
 		wg.Done()
 	}()
 
 	go func() {
 		log.Debug("模拟", zdfx.name, "的摇奖操作")
-		ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
-		zdfx.lottery(ctx, c)
-		defer cancel()
+		zdfx.lottery(c, token)
 		wg.Done()
 	}()
 	return c, true
 }
 
-func (zdfx *Zdfx) cookieSlice() chromedp.Action {
-	cookies := strings.Split(zdfx.cookie, ";")
+func setCookie(sign Sign) chromedp.Action {
+	cookies := strings.Split(sign.Cookie(), ";")
 	slice := make([]string, 0)
 	for _, c := range cookies {
 		if len(c) == 0 {
@@ -89,13 +101,15 @@ func (zdfx *Zdfx) cookieSlice() chromedp.Action {
 		params := strings.Trim(c, " ")
 		slice = append(slice, strings.Split(params, "=")...)
 	}
+	u, _ := url.Parse(sign.BasicUrl())
+	host := u.Host
 	return chromedp.ActionFunc(
 		func(ctx context.Context) error {
 			expr := cdp.TimeSinceEpoch(time.Now().Add(180 * 24 * time.Hour))
 			for i := 0; i < len(slice); i += 2 {
 				err := network.SetCookie(slice[i], slice[i+1]).
 					WithExpires(&expr).
-					WithDomain("bbs.zdfx.net").
+					WithDomain(host).
 					Do(ctx)
 				if err != nil {
 					return err
@@ -106,67 +120,85 @@ func (zdfx *Zdfx) cookieSlice() chromedp.Action {
 	)
 }
 
-func (zdfx *Zdfx) signInternal(ctx context.Context, cancel context.CancelFunc, c chan<- string) {
-	log.Debug(zdfx.name, "模拟签到操作启动浏览器")
-	sel := `#wp #JD_sign`
-	cn := 0
-	by := chromedp.ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
-		cn++
-		if cn >= 500 {
-			errString := "操作超时，签到成功"
-			log.Debug(errString)
-			cancel()
-			return nil, fmt.Errorf(errString)
-		}
-		id, count, err := dom.PerformSearch(sel).Do(ctx)
-		if err != nil {
-			return nil, err
-		}
+func (zdfx *Zdfx) sign(c chan<- string, hash, token string) {
+	req, err := http.NewRequest("GET", zdfx.baseUrl+"plugin.php?id=k_misign:sign", nil)
+	req.Header.Set("Cookie", zdfx.Cookie())
+	req.Header.Set("User-Agent", util.UA)
 
-		if count < 1 {
-			return []cdp.NodeID{}, nil
-		}
-
-		nodes, err := dom.GetSearchResults(id, 0, count).Do(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		return nodes, nil
-	})
-	err := chromedp.Run(ctx,
-		zdfx.cookieSlice(),
-		chromedp.Navigate(zdfx.baseUrl+`k_misign-sign.html`),
-		chromedp.Click(sel, by, chromedp.NodeReady),
-		chromedp.Reload(),
-	)
-	log.Debug(zdfx.name, "模拟签到操作完成，获取结果")
+	data := req.URL.Query()
+	data.Add("formhash", hash)
+	data.Add("token", token)
+	data.Add("operation", "qiandao")
+	data.Add("inajax", "1")
+	data.Add("format", "empty")
+	data.Add("ajaxtarget", "JD_sign")
+	req.URL.RawQuery = data.Encode()
 	if err != nil {
-		if err == context.Canceled {
-			c <- "已签到"
-		} else {
-			log.Panic(err)
-		}
-	} else {
-		c <- "已签到"
+		c <- err.Error()
+		return
 	}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		c <- err.Error()
+	}
+	log.Debug("获取", zdfx.name, "的签到结果")
+	c <- util.Text(resp, "root")
 }
 
-func (zdfx *Zdfx) lottery(ctx context.Context, c chan<- string) {
-	log.Debug(zdfx.name, "模拟摇奖操作启动浏览器")
-	var res string
-	err := chromedp.Run(ctx,
-		zdfx.cookieSlice(),
-		chromedp.Navigate(zdfx.baseUrl+`plugin.php?id=yinxingfei_zzza:yaoyao`),
-		chromedp.Click(`.num_box > .btn`, chromedp.NodeVisible),
-		chromedp.Sleep(5*time.Second),
-		chromedp.InnerHTML(`div #res`, &res),
-	)
-	log.Debug(zdfx.name, "模拟摇将操作完成，获取结果")
+func (zdfx *Zdfx) lottery(c chan<- string, token string) {
+	data := make(url.Values)
+	data["token"] = []string{token}
+	req, err := http.NewRequest("POST", zdfx.baseUrl+"plugin.php?id=yinxingfei_zzza:yaoyao", strings.NewReader(data.Encode()))
+	req.Header.Set("Cookie", zdfx.Cookie())
+	req.Header.Set("User-Agent", util.UA)
+	req.Header.Set("Content-Type", util.URLEncoded)
 	if err != nil {
-		log.Panic(err)
 		c <- err.Error()
-	} else {
-		c <- res
+		return
 	}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		c <- err.Error()
+	}
+	log.Debug("获取", zdfx.name, "的摇奖结果")
+	type result struct {
+		Success bool `json:"success"`
+		Token   bool `json:"token"`
+	}
+	res := new(result)
+	json.NewDecoder(resp.Body).Decode(res)
+	c <- fmt.Sprint(res)
+}
+
+func params(sign Sign) (params []string, err error) {
+	done := make(chan string)
+	var hash string
+	var ok bool
+	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
+	defer cancel()
+	chromedp.ListenTarget(ctx, func(ev interface{}) {
+		if ev, ok := ev.(*page.EventJavascriptDialogOpening); ok {
+			done <- ev.Message
+		}
+	})
+	tasks := chromedp.Tasks{
+		chromedp.AttributeValue("#scbar_form input:nth-child(2)", "value", &hash, &ok),
+		chromedp.EvaluateAsDevTools(`grecaptcha.execute('6Lfl9bwZAAAAADZ5gAwWyb7U2UynEMHR52oS8d9V', {action: 'create_comment'}).then(token => alert(token))`, nil),
+	}
+	err = chromedp.Run(ctx,
+		setCookie(sign),
+		chromedp.Navigate(sign.BasicUrl()+"plugin.php?id=k_misign:sign"),
+		tasks,
+	)
+	if err != nil {
+		return
+	}
+	params = make([]string, 2)
+	if ok {
+		params[0] = hash
+	}
+	params[1] = <-done
+	return
 }

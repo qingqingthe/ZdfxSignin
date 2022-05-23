@@ -38,7 +38,6 @@ func NewHuaHuoClient() Sign {
 	if len(cookie) == 0 {
 		return NewNoCookieClient(name)
 	}
-	log.Debug(name, "cookie:", cookie)
 	client := huahuo{
 		name,
 		baseUrl,
@@ -47,47 +46,45 @@ func NewHuaHuoClient() Sign {
 	return &client
 }
 
-func (huahuo *huahuo) Sign() (<-chan string, bool) {
+func (huahuo *huahuo) Do() (<-chan string, bool) {
 	signUrl := huahuo.baseUrl + "plugin.php?id=dsu_paulsign:sign&operation=qiandao&infloat=1&inajax=1"
-	data := make(url.Values)
+	data := url.Values{}
 	hashChannel := make(chan string)
 	go func() {
-		log.Debug("尝试获取", huahuo.name, "的hash")
+		log.Debug("获取"+huahuo.name, "的hash")
 		hash, ok := huahuo.FormHash()
-		log.Debug("hash结果:", hash, ok)
+		log.Debug(huahuo.name, "hash: ", hash)
 		if !ok {
 			hashChannel <- ""
 		} else {
 			hashChannel <- hash
 		}
 	}()
-	data["qdxq"] = []string{"kx"}
-	data["qdmode"] = []string{"1"}
-	data["todaysay"] = []string{"签到"}
-	data["fastreply"] = []string{"0"}
+	data.Add("qdxq", "kx")
+	data.Add("qdmode", "1")
+	data.Add("todaysay", "签到")
+	data.Add("fastreply", "0")
 	hash := <-hashChannel
 	if len(hash) == 0 {
 		return nil, false
 	}
-	data["formhash"] = []string{hash}
-	log.Debug("建立", huahuo.name, "的签到请求")
+	data.Add("formhash", hash)
 	req, err := http.NewRequest("POST", signUrl, strings.NewReader(data.Encode()))
-	log.Debug("请求结果", err == nil)
 	if err != nil {
 		return nil, false
 	}
 	req.Header.Set("Cookie", huahuo.cookie)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
+	req.Header.Set("Content-Type", util.URLEncoded)
+	req.Header.Set("User-Agent", util.UA)
 	c := make(chan string)
 	go func() {
 		log.Debug("发送", huahuo.name, "的签到请求")
-		res, err := client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			c <- err.Error()
 		}
 		log.Debug("获取", huahuo.name, "的签到结果")
-		c <- util.GetText(res, "div.c", "div.c")
+		c <- util.ParseText(resp, "div.c", "div.c")
 		close(c)
 	}()
 	return c, true

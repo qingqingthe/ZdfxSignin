@@ -2,6 +2,7 @@ package forum
 
 import (
 	"crypto/tls"
+	"github.com/LovesAsuna/ForumSignin/util"
 	"github.com/PuerkitoBio/goquery"
 	"net/http"
 )
@@ -22,7 +23,7 @@ var client = &http.Client{
 func FormHash(discuz Discuz) (string, bool) {
 	req, _ := http.NewRequest("GET", discuz.BasicUrl(), nil)
 	req.Header.Set("Cookie", discuz.Cookie())
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
+	req.Header.Set("User-Agent", util.UA)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {

@@ -7,7 +7,7 @@ type Sign interface {
 
 	Cookie() string
 
-	Sign() (<-chan string, bool)
+	Do() (<-chan string, bool)
 }
 
 type nocookieclient struct {
@@ -32,7 +32,7 @@ func (client *nocookieclient) Cookie() string {
 	return ""
 }
 
-func (client *nocookieclient) Sign() (<-chan string, bool) {
+func (client *nocookieclient) Do() (<-chan string, bool) {
 	c := make(chan string, 1)
 	c <- client.name + "Cookie未设置！"
 	close(c)
