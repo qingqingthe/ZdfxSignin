@@ -164,11 +164,22 @@ func (zdfx *Zdfx) lottery(c chan<- string, token string) {
 	}
 	log.Debug("获取", zdfx.name, "的摇奖结果")
 	type result struct {
-		Success bool `json:"success"`
-		Token   bool `json:"token"`
+		Success bool   `json:"success"`
+		Token   bool   `json:"token"`
+		Point   string `json:"jifen"`
 	}
-	res := new(result)
-	json.NewDecoder(resp.Body).Decode(res)
+	e := new(result)
+	json.NewDecoder(resp.Body).Decode(e)
+	var res string
+	if e.Success {
+		res = fmt.Sprintf("摇奖成功，获得%s点币\n", res)
+	} else {
+		if e.Token {
+			res = "你已经摇过奖了"
+		} else {
+			res = "token校验失败"
+		}
+	}
 	c <- fmt.Sprint(res)
 }
 
