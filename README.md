@@ -17,7 +17,7 @@
 
 **在本地使用：**
 
-1. 安装 JRE
+1. 安装`Go`环境
 2. Clone 本项目
-3. 在环境变量中添加与`Secrets`相同的值
-4. /gradlew run
+3. 在Shell中设置与`Secrets`相同的环境变量值
+4. go run .
