@@ -172,7 +172,7 @@ func (zdfx *Zdfx) lottery(c chan<- string, token string) {
 	json.NewDecoder(resp.Body).Decode(e)
 	var res string
 	if e.Success {
-		res = fmt.Sprintf("摇奖成功，获得%s点币\n", res)
+		res = fmt.Sprintf("摇奖成功，获得%s点币\n", e.Point)
 	} else {
 		if e.Token {
 			res = "你已经摇过奖了"
