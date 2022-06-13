@@ -122,6 +122,10 @@ func setCookie(sign Sign) chromedp.Action {
 
 func (zdfx *Zdfx) sign(c chan<- string, hash, token string) {
 	req, err := http.NewRequest("GET", zdfx.baseUrl+"plugin.php?id=k_misign:sign", nil)
+	if err != nil {
+		c <- err.Error()
+		return
+	}
 	req.Header.Set("Cookie", zdfx.Cookie())
 	req.Header.Set("User-Agent", util.UA)
 
@@ -138,10 +142,11 @@ func (zdfx *Zdfx) sign(c chan<- string, hash, token string) {
 		return
 	}
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		c <- err.Error()
+		return
 	}
+	defer resp.Body.Close()
 	log.Debug("获取", zdfx.name, "的签到结果")
 	c <- util.Text(resp, "root")
 }
@@ -200,7 +205,11 @@ func params(sign Sign) (params []string, err error) {
 	}
 	err = chromedp.Run(ctx,
 		setCookie(sign),
-		chromedp.Navigate(sign.BasicUrl()+"plugin.php?id=k_misign:sign"),
+		chromedp.ActionFunc(func(cxt context.Context) error {
+			_, err := page.AddScriptToEvaluateOnNewDocument("Object.defineProperty(navigator, 'webdriver', { get: () => false, });").Do(cxt)
+			return err
+		}),
+		chromedp.Navigate(sign.BasicUrl()+"k_misign-sign.html"),
 		tasks,
 	)
 	if err != nil {
