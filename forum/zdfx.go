@@ -207,7 +207,14 @@ func params(sign Sign) (params []string, err error) {
 		setCookie(sign),
 		chromedp.ActionFunc(func(cxt context.Context) error {
 			_, err := page.AddScriptToEvaluateOnNewDocument("Object.defineProperty(navigator, 'webdriver', { get: () => false, });").Do(cxt)
-			return err
+			if err != nil {
+				return err
+			}
+			_, err = page.AddScriptToEvaluateOnNewDocument("Object.defineProperty(window, 'yzfile', { get: () => 0, });").Do(cxt)
+			if err != nil {
+				return err
+			}
+			return nil
 		}),
 		chromedp.Navigate(sign.BasicUrl()+"k_misign-sign.html"),
 		tasks,
