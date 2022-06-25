@@ -64,28 +64,38 @@ func (zdfx *Zdfx) Do() (<-chan string, bool) {
 		close(c)
 	}()
 
-	log.Debug("获取"+zdfx.name, "的hash和token")
-	params, err := params(zdfx)
-	if err != nil {
-		go func() {
-			c <- err.Error()
-			wg.Add(-2)
-		}()
-		return c, false
+	paramsFunc := func(action string) ([]string, error) {
+		log.Debugf("获取%s%s操作的hash和token", zdfx.name, action)
+		params, err := params(zdfx)
+		if err != nil {
+			return nil, err
+		}
+		hash := params[0]
+		token := params[1]
+		log.Debugf("%s%s操作hash: %s", zdfx.name, action, hash)
+		log.Debugf("%s%s操作token: %s", zdfx.name, action, token)
+		return params, err
 	}
-	hash := params[0]
-	token := params[1]
-	log.Debug(zdfx.name, "hash: ", hash)
-	log.Debug(zdfx.name, "token: ", token)
+
 	go func() {
 		log.Debug("模拟", zdfx.name, "的签到操作")
-		zdfx.sign(c, hash, token)
+		params, err := paramsFunc("签到")
+		if err != nil {
+			c <- err.Error()
+		} else {
+			zdfx.sign(c, params[0], params[1])
+		}
 		wg.Done()
 	}()
 
 	go func() {
 		log.Debug("模拟", zdfx.name, "的摇奖操作")
-		zdfx.lottery(c, token)
+		params, err := paramsFunc("摇奖")
+		if err != nil {
+			c <- err.Error()
+		} else {
+			zdfx.lottery(c, params[1])
+		}
 		wg.Done()
 	}()
 	return c, true
