@@ -1,10 +1,17 @@
 package forum
 
 import (
+	"context"
 	"crypto/tls"
 	"github.com/LovesAsuna/ForumSignin/util"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/chromedp"
 	"net/http"
+	"net/url"
+	"strings"
+	"time"
 )
 
 type Discuz interface {
@@ -34,4 +41,33 @@ func FormHash(discuz Discuz) (string, bool) {
 		return err.Error(), false
 	}
 	return doc.Find("#scbar_form").Find("input:nth-child(2)").Attr("value")
+}
+
+func setCookie(sign Sign) chromedp.Action {
+	cookies := strings.Split(sign.Cookie(), ";")
+	slice := make([]string, 0)
+	for _, c := range cookies {
+		if len(c) == 0 {
+			continue
+		}
+		params := strings.Trim(c, " ")
+		slice = append(slice, strings.Split(params, "=")...)
+	}
+	u, _ := url.Parse(sign.BasicUrl())
+	host := u.Host
+	return chromedp.ActionFunc(
+		func(ctx context.Context) error {
+			expr := cdp.TimeSinceEpoch(time.Now().Add(180 * 24 * time.Hour))
+			for i := 0; i < len(slice); i += 2 {
+				err := network.SetCookie(slice[i], slice[i+1]).
+					WithExpires(&expr).
+					WithDomain(host).
+					Do(ctx)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	)
 }

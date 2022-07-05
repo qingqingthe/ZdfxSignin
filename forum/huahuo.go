@@ -1,7 +1,12 @@
 package forum
 
 import (
+	"bufio"
+	"context"
+	"fmt"
 	"github.com/LovesAsuna/ForumSignin/util"
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/chromedp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
@@ -48,6 +53,26 @@ func NewHuaHuoClient() Sign {
 
 func (huahuo *huahuo) Do() (<-chan string, bool) {
 	signUrl := huahuo.baseUrl + "plugin.php?id=dsu_paulsign:sign&operation=qiandao&infloat=1&inajax=1"
+	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
+	defer cancel()
+	var cookies []*network.Cookie
+	tasks := chromedp.Tasks{
+		setCookie(huahuo),
+		chromedp.Navigate(signUrl),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			result, err := network.GetAllCookies().Do(ctx)
+			cookies = result
+			return err
+		}),
+	}
+	err := chromedp.Run(ctx, tasks)
+	if err != nil {
+		return nil, false
+	}
+	var builder bufio.Writer
+	for _, cookie := range cookies {
+		builder.WriteString(fmt.Sprintf("%s; ", cookie.Value))
+	}
 	data := url.Values{}
 	hashChannel := make(chan string)
 	go func() {

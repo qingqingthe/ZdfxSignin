@@ -19,9 +19,11 @@ func main() {
 		wg.Add(1)
 		go func(client forum.Sign) {
 			log.Debug("开始执行", client.Name(), "的签到操作")
-			c, _ := client.Do()
-			for m := range c {
-				log.Println(m)
+			c, res := client.Do()
+			if res {
+				for m := range c {
+					log.Println(m)
+				}
 			}
 			wg.Done()
 		}(client)

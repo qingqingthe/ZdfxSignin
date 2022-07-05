@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/LovesAsuna/ForumSignin/util"
-	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	log "github.com/sirupsen/logrus"
@@ -15,7 +13,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 )
 
 type Zdfx struct {
@@ -99,35 +96,6 @@ func (zdfx *Zdfx) Do() (<-chan string, bool) {
 		wg.Done()
 	}()
 	return c, true
-}
-
-func setCookie(sign Sign) chromedp.Action {
-	cookies := strings.Split(sign.Cookie(), ";")
-	slice := make([]string, 0)
-	for _, c := range cookies {
-		if len(c) == 0 {
-			continue
-		}
-		params := strings.Trim(c, " ")
-		slice = append(slice, strings.Split(params, "=")...)
-	}
-	u, _ := url.Parse(sign.BasicUrl())
-	host := u.Host
-	return chromedp.ActionFunc(
-		func(ctx context.Context) error {
-			expr := cdp.TimeSinceEpoch(time.Now().Add(180 * 24 * time.Hour))
-			for i := 0; i < len(slice); i += 2 {
-				err := network.SetCookie(slice[i], slice[i+1]).
-					WithExpires(&expr).
-					WithDomain(host).
-					Do(ctx)
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		},
-	)
 }
 
 func (zdfx *Zdfx) sign(c chan<- string, hash, token string) {
