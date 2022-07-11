@@ -51,7 +51,12 @@ func setCookie(sign Sign) chromedp.Action {
 			continue
 		}
 		params := strings.Trim(c, " ")
-		slice = append(slice, strings.Split(params, "=")...)
+		array := strings.Split(params, "=")
+		for _, s := range array {
+			if s != "" {
+				slice = append(slice, s)
+			}
+		}
 	}
 	u, _ := url.Parse(sign.BasicUrl())
 	host := u.Host

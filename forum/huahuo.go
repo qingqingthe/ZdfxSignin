@@ -67,7 +67,10 @@ func (huahuo *huahuo) Do() (<-chan string, bool) {
 	}
 	err := chromedp.Run(ctx, tasks)
 	if err != nil {
-		return nil, false
+		c := make(chan string, 1)
+		defer close(c)
+		c <- err.Error()
+		return c, false
 	}
 	var builder bufio.Writer
 	for _, cookie := range cookies {
