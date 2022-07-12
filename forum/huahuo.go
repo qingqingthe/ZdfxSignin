@@ -1,11 +1,11 @@
 package forum
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"github.com/LovesAsuna/ForumSignin/util"
 	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -58,6 +58,13 @@ func (huahuo *huahuo) Do() (<-chan string, bool) {
 	var cookies []*network.Cookie
 	tasks := chromedp.Tasks{
 		setCookie(huahuo),
+		chromedp.ActionFunc(func(cxt context.Context) error {
+			_, err := page.AddScriptToEvaluateOnNewDocument("Object.defineProperty(navigator, 'webdriver', { get: () => false, });").Do(cxt)
+			if err != nil {
+				return err
+			}
+			return nil
+		}),
 		chromedp.Navigate(signUrl),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			result, err := network.GetAllCookies().Do(ctx)
@@ -72,7 +79,7 @@ func (huahuo *huahuo) Do() (<-chan string, bool) {
 		c <- err.Error()
 		return c, false
 	}
-	var builder bufio.Writer
+	var builder strings.Builder
 	for _, cookie := range cookies {
 		builder.WriteString(fmt.Sprintf("%s; ", cookie.Value))
 	}
