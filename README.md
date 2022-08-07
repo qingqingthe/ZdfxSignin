@@ -3,7 +3,7 @@
 * [终点论坛](https://bbs.zdfx.net/)
     * 签到
     * 摇奖
-* [花火学园](https://www.sayhuahuo.com/forum.php/)
+* [花火学园](https://www.sayhuahuo.com/forum.php/)(暂时不可用)
     * 签到
 
 ## 使用方法
